@@ -7,16 +7,61 @@ from langchain.agents.agent_types import AgentType
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
+from langchain.callbacks.streamlit import StreamlitCallbackHandler
+from langchain.callbacks.base import BaseCallbackHandler
 
 
+from langchain.schema import AgentAction
+
+import pandas as pd
+import io
+import tempfile
+import json
+import re       
+        
 # Import modularized components
 from modules.data_preparation import prepare_dataframe
 from modules.agent_tools import create_python_tool
-from modules.query_processing import create_guardrail_chain, run_guardrail_loop, extract_query
+from modules.query_processing import create_guardrail_chain, run_guardrail_loop, extract_query, run_guardrail_loop_streamlit
+            
 
+class StreamlitChatCallbackHandler(BaseCallbackHandler):
+    def on_agent_action(self, action: AgentAction, **kwargs) -> None:
+        
+        thought = action.log.split("Action")[0].strip()
+        
+        # with st.chat_message("assistant"):
+        #     st.markdown("**🤔 Thought:**")
+        #     st.markdown(action.log)
+        
+        with st.chat_message("assistant"):
+            st.markdown("**🤔 Thought:**")
+            #st.markdown(action.log)
+            st.markdown(thought)
+
+            st.markdown("**🔧 Action:**")
+            st.markdown(f"`{action.tool}`")
+
+            st.markdown("**🧾 Action Input:**")
+            st.code(str(action.tool_input), language="python")
+
+    def on_tool_end(self, output: str, **kwargs) -> None:
+        with st.chat_message("assistant"):
+            st.markdown("**👀 Observation:**")
+
+            # Try to render tabular data if present
+            try:
+                df = pd.read_fwf(io.StringIO(output))
+                if not df.empty and df.shape[1] > 1:
+                    st.dataframe(df, use_container_width=True)
+                else:
+                    st.code(output)
+            except Exception:
+                st.code(output)            
+            
 # Set page configuration
 st.set_page_config(
-    page_title="CSV Agent Chat",
+    page_title="Talk2Table",
     page_icon="📊",
     layout="wide",
 )
@@ -166,8 +211,13 @@ if uploaded_csv:
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
         verbose=True,
         memory=st.session_state.memory,
+        
     )
     st.session_state.agent = agent
+    
+    container = st.container()
+    callback = StreamlitChatCallbackHandler()
+    
     
     # Clean up temporary files
     if desc_path:
@@ -203,7 +253,6 @@ if st.session_state.df is not None:
         # Add user message to history
         st.session_state.messages.append({"role": "user", "content": user_query})
         
-        # Process with guardrail
         with st.spinner("Processing query..."):
             if st.session_state.guardrail_chain:
                 # Custom processing for Streamlit UI
@@ -217,7 +266,7 @@ if st.session_state.df is not None:
                 guardrail_response = st.session_state.guardrail_chain.run(**inputs)
                 
                 # Check if clarification is needed
-                if "clarification needed" in guardrail_response.lower():
+                if "clarification" in guardrail_response.lower():
                     # Display assistant message for clarification
                     with st.chat_message("assistant"):
                         st.markdown(guardrail_response)
@@ -227,19 +276,23 @@ if st.session_state.df is not None:
                     
                     # Update memory
                     st.session_state.memory_gr.save_context({"user_input": user_query}, {"output": guardrail_response})
+
+
                 else:
                     # Extract the query
                     final_query = extract_query(guardrail_response)
-                    
+                    print(f"Final query: {final_query}")
+                    # Update memory with the final query
                     # Run the agent
                     try:
-                        result = st.session_state.agent.run(final_query)
+                
+                        result = st.session_state.agent.run(final_query, callbacks=[callback])
                         
-                        # Display assistant message
-                        with st.chat_message("assistant"):
-                            st.markdown(result)
+                        # Display entire output by default
                         
-                        # Add assistant message to history
+                        st.markdown("#### Summarized Response")
+                        st.markdown(result)
+
                         st.session_state.messages.append({"role": "assistant", "content": result})
                         
                     except Exception as e:
