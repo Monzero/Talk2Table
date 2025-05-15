@@ -22,7 +22,7 @@ import re
 # Import modularized components
 from modules.data_preparation import prepare_dataframe
 from modules.agent_tools import create_python_tool
-from modules.query_processing import create_guardrail_chain, run_guardrail_loop, extract_query, run_guardrail_loop_streamlit
+from modules.query_processing import create_guardrail_chain, run_guardrail_loop, extract_query
             
 
 class StreamlitChatCallbackHandler(BaseCallbackHandler):
