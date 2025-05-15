@@ -164,7 +164,7 @@ if uploaded_csv:
         tools=tools,
         llm=llm,
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        verbose=False,
+        verbose=True,
         memory=st.session_state.memory,
     )
     st.session_state.agent = agent
