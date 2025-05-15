@@ -40,13 +40,13 @@ def create_python_tool(globals_dict, col_desc_str=""):
             description=(
                 "When user ask any question, the answer is assumed to be in the 'df' dataframe."
                 "Use this to execute Python code. The tool is called 'python'.  — do NOT use square brackets like [python]. Use it as: Action: python"
-                " 'df' is already loaded and is available for use. "
-                "Do NOT attempt to load files or any library yourself. "
-                "You already have access to pandas as pd and numpy as np."
-                "You can access and analyze `df` directly."
-                "You can use pandas operations like df.head(), df.describe(), "
-                "df['column'].value_counts(), etc."
+                " 'df' is already loaded and is available for use. You can access and analyze `df` directly."
+                "Do NOT attempt to load files or libraries yourself. You already have access to pandas as pd and numpy as np."
+                "DO NOT import pandas or numpy again."
+                "You can use pandas operations like df.head(), df.describe(), df['column'].value_counts(), etc."
                 "When asked for quick summary or quick rundown of the data, you can use df.info() or df.describe() to get a quick overview of the data."
+                "When you have to work with dates, first see the format of the date column. If it is string of certain pattern, first adjust the format and then convert in datetime" 
+                "When working with dates, first check the data type of the date column. You might have to convert it to datetime format."
                 f"whereever you need to know more details about what each column means, you can refer to {col_desc_str} for more details about the columns. "
             ),
         )
