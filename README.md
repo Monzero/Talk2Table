@@ -1,15 +1,15 @@
-# 🧠 AI-Powered Query Response App
+# Talk2Table
 
 A modular Python project that processes user queries through a Streamlit interface using custom agents and data pipelines.
 
-## 🚀 Features
+## Features
 
-- 📦 Modular design: Components for data preparation, query parsing, and agent tools
-- 💡 Natural language query processing
-- 🧱 Streamlit frontend for interactive querying
-- 🧪 Customizable agents and tools
+- Modular design: Components for data preparation, query parsing, and agent tools
+- Natural language query processing
+- Streamlit frontend for interactive querying
+- Customizable agents and tools
 
-## 📁 Project Structure
+## Project Structure
 
 ```plaintext
 .
@@ -49,7 +49,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## 🧠 Modules Overview
+## Modules Overview
 
 - modules/agent_tools.py  
   → Custom tools and functions used by agents to enhance or retrieve responses.
@@ -60,7 +60,7 @@ streamlit run app.py
 - modules/query_processing.py  
   → Interprets and routes user queries to the right logic or agent.
 
-## ✅ Requirements
+## Requirements
 
 - Python ≥ 3.8
 - streamlit
@@ -70,13 +70,10 @@ streamlit run app.py
 
 (Add a requirements.txt file or install with pip freeze > requirements.txt)
 
-## 🏗️ Extending
+## Extending
 
 You can add new tools or data sources by extending:
 - agent_tools.py — to support new response functions
 - data_preparation.py — to preprocess different types of content
 - query_processing.py — to introduce new query intent recognition logic
 
-## 📝 License
-
-MIT License. See LICENSE file for more details.
