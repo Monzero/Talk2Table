@@ -45,6 +45,7 @@ def create_python_tool(globals_dict, col_desc_str=""):
                 "You can access and analyze `df` directly."
                 "You can use pandas operations like df.head(), df.describe(), "
                 "df['column'].value_counts(), etc."
+                "When asked for quick summary or quick rundown of the data, you can use df.info() or df.describe() to get a quick overview of the data."
                 f"whereever you need to know more details about what each column means, you can refer to {col_desc_str} for more details about the columns. "
             ),
         )
