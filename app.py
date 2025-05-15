@@ -257,3 +257,4 @@ else:
 # Footer
 st.markdown("---")
 st.caption("CSV Agent Chat - A tool for analyzing CSV data using natural language")
+st.markdown("Built with ♥️ by Monil Shah")
