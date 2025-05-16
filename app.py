@@ -285,9 +285,9 @@ if st.session_state.df is not None:
                 
                 chat_history = extract_chat_history_from_string(str(st.session_state.memory_gr.buffer))
                 
-                with st.chat_message("assistant"):
-                        st.markdown("**🤔 current memory:**")
-                        st.markdown(chat_history)
+                #with st.chat_message("assistant"):
+                        #st.markdown("**🤔 current memory:**")
+                        #st.markdown(chat_history)
                         #st.markdown("**🤔 Raw:**")
                         #st.markdown(str(st.session_state.memory_gr.buffer))
                 
