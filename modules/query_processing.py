@@ -1,6 +1,8 @@
 # modules/query_processing.py
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
+import streamlit as st
+import re
 
 def extract_query(response: str) -> str:
     """
@@ -38,7 +40,11 @@ def run_guardrail_loop(clarifier_chain, original_input, df_info, col_desc, memor
     if memory_gr is None:
         memory_gr = ConversationBufferMemory(memory_key="chat_history", input_key="user_input", return_messages=True)
     else:
-        memory_gr.clear()
+        #memory_gr.clear()
+        for message in memory_gr.chat_memory.messages:
+            role = "User" if message.type == "human" else "Guardrail"
+            chat_history += f"{role}: {message.content}\n"
+
     
     while True:
         inputs = {
@@ -60,7 +66,7 @@ def run_guardrail_loop(clarifier_chain, original_input, df_info, col_desc, memor
 
         # Ask user for clarification
         clarification = input("🤖 Clarification needed. Please provide more detail: ")
-        current_input = "Original prompt was :" + current_input + " then user clarified :" + clarification
+        current_input = clarification
 
     return response
 
@@ -82,3 +88,60 @@ def create_guardrail_chain(llm, prompt_template):
         prompt=prompt_template,
         memory=memory_gr,
     ), memory_gr
+
+def extract_chat_history_from_string(chat_string):
+    pattern = r"HumanMessage\(content='(.*?)'.*?AIMessage\(content='(.*?)'"
+    matches = re.findall(pattern, chat_string, re.DOTALL)
+    
+    chat_history = []
+    for human_msg, ai_msg in matches:
+        chat_history.append(f"User: {human_msg.strip()}\n\n AI Replied: {ai_msg.strip()}")
+    
+    return "\n\n".join(chat_history)
+
+def run_guardrail_loop_streamlit(clarifier_chain, original_input, df_info, col_desc, memory_gr=None):
+    """
+    Streamlit-compatible version of run_guardrail_loop for clarifying user input.
+
+    Returns:
+        str or None: Final processed query, or None if still waiting for clarification input.
+    """
+    # Initialize session state variables
+    if "gr_phase" not in st.session_state:
+        st.session_state.gr_phase = "initial"
+        st.session_state.gr_input = original_input
+        st.session_state.gr_history = ""
+        st.session_state.gr_last_response = ""
+        st.session_state.gr_final_query = ""
+
+    # Memory setup
+    if memory_gr is None:
+        memory_gr = ConversationBufferMemory(memory_key="chat_history", input_key="user_input", return_messages=True)
+    else:
+        memory_gr.clear()
+
+    current_input = st.session_state.gr_input
+    chat_history = st.session_state.gr_history
+
+    # First phase: run the clarifier
+    if st.session_state.gr_phase == "initial":
+        inputs = {
+            "user_input": current_input,
+            "df_info": df_info,
+            "col_desc": col_desc,
+            "chat_history": chat_history
+        }
+
+        response = clarifier_chain.run(**inputs)
+        st.session_state.gr_last_response = response
+        st.session_state.gr_history += f"\nUser: {current_input}\nGuardrail: {response}"
+
+        if "Clarification" not in response.strip().lower():
+            st.session_state.gr_phase = "done"
+            st.session_state.gr_final_query = extract_query(response)
+            return st.session_state.gr_final_query
+        else:
+            st.session_state.gr_phase = "awaiting_clarification"
+            st.session_state.gr_final_query = response
+            return st.session_state.gr_final_query
+
