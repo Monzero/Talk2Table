@@ -124,7 +124,7 @@ if "guardrail_chain" not in st.session_state:
     st.session_state.guardrail_chain = None
 
 # Main content area
-st.title("CSV Agent Chat")
+st.title("Talk2Table")
 
 # Load API key from .env
 load_dotenv()
