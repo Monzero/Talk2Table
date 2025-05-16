@@ -22,7 +22,7 @@ import re
 # Import modularized components
 from modules.data_preparation import prepare_dataframe
 from modules.agent_tools import create_python_tool
-from modules.query_processing import create_guardrail_chain, run_guardrail_loop, extract_query
+from modules.query_processing import create_guardrail_chain, run_guardrail_loop, extract_query, extract_chat_history_from_string
             
 
 class StreamlitChatCallbackHandler(BaseCallbackHandler):
@@ -37,7 +37,7 @@ class StreamlitChatCallbackHandler(BaseCallbackHandler):
         with st.chat_message("assistant"):
             st.markdown("**🤔 Thought:**")
             #st.markdown(action.log)
-            st.markdown(thought)
+            st.markdown(f"`{thought}`")
 
             st.markdown("**🔧 Action:**")
             st.markdown(f"`{action.tool}`")
@@ -75,11 +75,11 @@ with st.sidebar:
     uploaded_desc = st.file_uploader("Upload column descriptions (optional)", type="txt")
     
     # Model selection
-    model_name = st.selectbox(
-        "Select Model",
-        ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"],
-        index=0
-    )
+    # model_name = st.selectbox(
+    #     "Select Model",
+    #     ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"],
+    #     index=0
+    # )
     
     # Clear buttons
     if st.button("Clear Chat History"):
@@ -88,12 +88,12 @@ with st.sidebar:
         st.session_state.memory_gr = ConversationBufferMemory(memory_key="chat_history", input_key="user_input", return_messages=True)
         st.success("Chat history cleared!")
     
-    if st.button("Start New Session"):
-        st.session_state.messages = []
-        st.session_state.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        st.session_state.memory_gr = ConversationBufferMemory(memory_key="chat_history", input_key="user_input", return_messages=True)
-        st.session_state.df = None
-        st.success("New session started! Please upload a new CSV file.")
+    # if st.button("Start New Session"):
+    #     st.session_state.messages = []
+    #     st.session_state.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    #     st.session_state.memory_gr = ConversationBufferMemory(memory_key="chat_history", input_key="user_input", return_messages=True)
+    #     st.session_state.df = None
+    #     st.success("New session started! Please upload a new CSV file.")
 
 # Initialize session state variables
 if "messages" not in st.session_state:
@@ -160,55 +160,67 @@ if uploaded_csv:
     st.session_state.globals_dict = globals_dict
     
     # Set up the LLM
+    llm_gr = ChatOpenAI(
+        temperature=1,
+        model_name="gpt-4o-mini"
+    )
+    
+    # Set up the LLM
     llm = ChatOpenAI(
         temperature=0,
-        model_name=model_name
+        model_name="gpt-3.5-turbo"
     )
+    
     
     # Create tools for the agent
     tools = create_python_tool(globals_dict, col_desc_str)
     
     # Create guardrail prompt template
     guardrail_prompt = PromptTemplate(
-        input_variables=["user_input", "df_info", "col_desc", "chat_history"],
-        template="""
-        You are a query assessment agent. Your job is to decide if a user's query can be answered using the given dataset.
+    input_variables=["user_input", "df_info", "col_desc", "chat_history"],
+    template="""
+    You are a bridge between query tool and user. Your job is to make sense of a user's input and make clear instruction for next tool about what user wants.
 
-        The dataset has the following columns:
-        {df_info}
+    The dataset has the following columns:
+    {df_info}
+    Based on the columns, you can infer which columns are relevant to the user query.
+    
+    Please refer to column descriptions for better clarity and how to make sense of the columns:
+    {col_desc}
 
-        Column descriptions:
-        {col_desc}
+    Conversation so far we have with the user:
+    {chat_history}
+    You should consider this conversation to add context to the user query.
+    
+    The User query is:
+    "{user_input}"
 
-        Conversation so far:
-        {chat_history}
+    Instructions:
+    1. Leverage all information above to understand the user query and rephase it with clarity for next tool. 
+    2. If the user query is ambiguous or unclear (e.g., refers to something not in columns), ask for clarification.
+    3. Once the query is clear, rephrase it into a precise form for downstream analysis.
+    4. If the query is already clear and relevant to the dataset, just rephrase it clearly.
+    5. Make sure to not have word 'clarification' in the response if query is clear.
 
-        User query:
-        "{user_input}"
+    Respond ONLY in one of the following formats:
+    - If unclear:
+    Clarification Needed: <your clarification question>
+    - If clear:
+    Rephrased Query: <your improved query>
+    """
+)
 
-        Instructions:
-        1. If the user query is ambiguous or unclear (e.g., refers to something not in columns), ask for clarification.
-        2. Once the query is clear, rephrase it into a precise form for downstream analysis.
-        3. If the query is already clear and relevant to the dataset, just rephrase it clearly.
-        4. Make sure to not have word 'clarification' in the response if query is clear.
-
-        Respond ONLY in one of the following formats:
-        - If unclear:
-        Clarification Needed: <your clarification question>
-        - If clear:
-        Rephrased Query: <your improved query>
-        """
-    )
+    
     
     # Create guardrail chain
-    guardrail_chain, _ = create_guardrail_chain(llm, guardrail_prompt)
+    guardrail_chain, _ = create_guardrail_chain(llm_gr, guardrail_prompt)
     st.session_state.guardrail_chain = guardrail_chain
     
     # Initialize the agent
     agent = initialize_agent(
         tools=tools,
         llm=llm,
-        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,  # ZERO_SHOT_REACT_DESCRIPTION, #CONVERSATIONAL_REACT_DESCRIPTION
         verbose=True,
         memory=st.session_state.memory,
         
@@ -256,15 +268,30 @@ if st.session_state.df is not None:
         with st.spinner("Processing query..."):
             if st.session_state.guardrail_chain:
                 # Custom processing for Streamlit UI
+                
+                chat_history = extract_chat_history_from_string(str(st.session_state.memory_gr.buffer))
+                
+                # Run the guardrail chain
                 inputs = {
                     "user_input": user_query,
                     "df_info": st.session_state.df_info_str,
                     "col_desc": st.session_state.col_desc_str,
-                    "chat_history": str(st.session_state.memory_gr.buffer)
+                    "chat_history": chat_history
                 }
                 
                 guardrail_response = st.session_state.guardrail_chain.run(**inputs)
+                # Update memory
+                st.session_state.memory_gr.save_context({"user_input": user_query}, {"output": guardrail_response})
                 
+                chat_history = extract_chat_history_from_string(str(st.session_state.memory_gr.buffer))
+                
+                with st.chat_message("assistant"):
+                        st.markdown("**🤔 current memory:**")
+                        st.markdown(chat_history)
+                        #st.markdown("**🤔 Raw:**")
+                        #st.markdown(str(st.session_state.memory_gr.buffer))
+                
+
                 # Check if clarification is needed
                 if "clarification" in guardrail_response.lower():
                     # Display assistant message for clarification
@@ -274,10 +301,6 @@ if st.session_state.df is not None:
                     # Add assistant message to history
                     st.session_state.messages.append({"role": "assistant", "content": guardrail_response})
                     
-                    # Update memory
-                    st.session_state.memory_gr.save_context({"user_input": user_query}, {"output": guardrail_response})
-
-
                 else:
                     # Extract the query
                     final_query = extract_query(guardrail_response)
