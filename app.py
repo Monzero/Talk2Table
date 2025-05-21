@@ -28,6 +28,11 @@ from modules.dataframe_analyzer import DataFrameAnalyzer, ColumnDescriptionParse
             
 
 class StreamlitChatCallbackHandler(BaseCallbackHandler):
+    # def on_chain_start(self, serialized: dict, inputs: dict, **kwargs) -> None:
+    #     with st.chat_message("assistant"):
+    #         st.markdown("🔄 **Chain started**")
+    #         st.json(inputs)
+     
     def on_agent_action(self, action: AgentAction, **kwargs) -> None:
         
         thought = action.log.split("Action")[0].strip()
@@ -47,20 +52,33 @@ class StreamlitChatCallbackHandler(BaseCallbackHandler):
             st.markdown("**🧾 Action Input:**")
             st.code(str(action.tool_input), language="python")
 
-    def on_tool_end(self, output: str, **kwargs) -> None:
-        with st.chat_message("assistant"):
-            st.markdown("**👀 Observation:**")
+    # def on_tool_end(self, output: str, **kwargs) -> None:
+    #     with st.chat_message("assistant"):
+    #         st.markdown("**👀 Observation:**")
 
-            # Try to render tabular data if present
-            try:
-                df = pd.read_fwf(io.StringIO(output))
-                if not df.empty and df.shape[1] > 1:
-                    st.dataframe(df, use_container_width=True)
-                else:
-                    st.code(output)
-            except Exception:
-                st.code(output)            
-            
+    #         # Try to render tabular data if present
+    #         try:
+    #             df = pd.read_fwf(io.StringIO(output))
+    #             if not df.empty and df.shape[1] > 1:
+    #                 st.dataframe(df, use_container_width=True)
+    #             else:
+    #                 st.code(output)
+    #         except Exception:
+    #             st.code(output)            
+    
+    # def on_llm_end(self, response, **kwargs) -> None:
+    #     with st.chat_message("assistant"):
+    #         st.markdown("📝 **LLM Response:**")
+    #         st.markdown(response.generations[0][0].text)
+
+
+    def on_chain_end(self, outputs: dict, **kwargs) -> None:
+        with st.chat_message("assistant"):
+            st.markdown("✅ **Chain completed**")
+            st.json(outputs)
+
+    
+    
 # Set page configuration
 st.set_page_config(
     page_title="Talk2Table",
@@ -321,7 +339,7 @@ if st.session_state.df is not None:
                     # Run the agent
                     try:
                 
-                        result = st.session_state.agent.run(input=final_query, callbacks=[callback], handle_parsing_errors=True)
+                        result = st.session_state.agent.run(input=final_query, callbacks=[callback])
                         
                         # Display entire output by default
                         
