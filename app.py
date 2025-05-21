@@ -9,7 +9,7 @@ from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 from langchain.callbacks.streamlit import StreamlitCallbackHandler
 from langchain.callbacks.base import BaseCallbackHandler
-import sweetviz as sv
+#import sweetviz as sv
 
 from langchain.schema import AgentAction
 
