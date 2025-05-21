@@ -588,6 +588,7 @@ class DataFrameAnalyzer:
                 "correlation_matrix": self.basic_info.get("correlations", {})
             }
         
+        #print(analysis_package)
         return analysis_package
 
 class ColumnDescriptionParser:
@@ -708,7 +709,8 @@ class ColumnDescriptionParser:
             column_details = self.analysis_results.get("column_details", {})
             
             # Get total row count from analysis results
-            self.total_rows = self.analysis_results.get("total_rows", 0)
+            self.total_rows = self.analysis_results.get("dataframe_info", {}).get("row_count", 0)
+
             
             # If total_rows is not provided in analysis_results, try to determine it from data
             if self.total_rows == 0:
@@ -1713,12 +1715,12 @@ class ColumnDescriptionParser:
             lines.append("")
         
         # Add tips for querying the dataset
-        lines.append("## Suggested Query Approaches")
-        lines.append("When asking questions about this dataset, consider:")
-        lines.append("- For categorical columns, inquire about distribution and frequencies.")
-        lines.append("- For numeric columns, ask about ranges, averages, correlations, and outliers.")
-        lines.append("- For datetime columns, explore temporal patterns and trends.")
-        lines.append("- Cross-column analysis may reveal interesting relationships in the data.")
+        # lines.append("## Suggested Query Approaches")
+        # lines.append("When asking questions about this dataset, consider:")
+        # lines.append("- For categorical columns, inquire about distribution and frequencies.")
+        # lines.append("- For numeric columns, ask about ranges, averages, correlations, and outliers.")
+        # lines.append("- For datetime columns, explore temporal patterns and trends.")
+        # lines.append("- Cross-column analysis may reveal interesting relationships in the data.")
         
         return "\n".join(lines)
 
@@ -2610,7 +2612,13 @@ def generate_dataset_report_for_llm(
     # Step 3: Create parser with formatted descriptions and analysis results
     parser = ColumnDescriptionParser(formatted_col_desc, analysis_results, verbose=verbose)
     
+    #Intermediate step
+    md_report = parser.get_markdown_report()
+    with open("dataset_report.md", "w", encoding="utf-8") as f:
+        f.write(md_report) 
+    
     # Step 4: Generate LLM-friendly report
     llm_report = parser.get_llm_context_report()
+    
     
     return llm_report
