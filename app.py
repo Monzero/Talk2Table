@@ -321,7 +321,7 @@ if st.session_state.df is not None:
                     # Run the agent
                     try:
                 
-                        result = st.session_state.agent.run(final_query, callbacks=[callback], handle_parsing_errors=True)
+                        result = st.session_state.agent.run(input=final_query, callbacks=[callback], handle_parsing_errors=True)
                         
                         # Display entire output by default
                         
