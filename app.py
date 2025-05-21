@@ -257,7 +257,7 @@ if st.session_state.df is not None:
         
     # Display column descriptions if available
     if st.session_state.col_desc_str:
-        with st.expander("Column Descriptions"):
+        with st.expander("High level data observation"):
             st.text(st.session_state.col_desc_str)
 
 # Display the conversation history
