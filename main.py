@@ -117,7 +117,7 @@ if __name__ == "__main__":
             #print('\n\n')
             
             print("🧠 Final Query:", final_query)
-            result = agent.run(final_query, handle_parsing_errors=True)
+            result = agent.run(input=final_query, handle_parsing_errors=True)
             print(f"🧠 Answer: {result}\n")
         except Exception as e:
             print(f"❌ Error: {e}")
