@@ -90,6 +90,7 @@ agent = initialize_agent(
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, #ZERO_SHOT_REACT_DESCRIPTION #CONVERSATIONAL_REACT_DESCRIPTION
     verbose=True,
     memory=memory,
+    handle_parsing_errors=True,
 )
 
 # Interactively test the agent

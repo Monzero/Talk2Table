@@ -253,6 +253,7 @@ if uploaded_csv:
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,  # ZERO_SHOT_REACT_DESCRIPTION, #CONVERSATIONAL_REACT_DESCRIPTION
         verbose=True,
         memory=st.session_state.memory,
+        handle_parse_errors=True,
         
     )
     st.session_state.agent = agent
