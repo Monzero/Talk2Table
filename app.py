@@ -9,7 +9,7 @@ from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 from langchain.callbacks.streamlit import StreamlitCallbackHandler
 from langchain.callbacks.base import BaseCallbackHandler
-
+import sweetviz as sv
 
 from langchain.schema import AgentAction
 
@@ -23,6 +23,8 @@ import re
 from modules.data_preparation import prepare_dataframe
 from modules.agent_tools import create_python_tool
 from modules.query_processing import create_guardrail_chain, run_guardrail_loop, extract_query, extract_chat_history_from_string
+from modules.dataframe_analyzer import DataFrameAnalyzer, ColumnDescriptionParser, generate_dataset_report_for_llm
+
             
 
 class StreamlitChatCallbackHandler(BaseCallbackHandler):
@@ -153,6 +155,17 @@ if uploaded_csv:
     # Load dataframe and related information
     df, df_info_str, col_desc_str, globals_dict = prepare_dataframe(csv_path, desc_path)
     
+    col_desc_str = str(generate_dataset_report_for_llm(df, col_desc_str, os.getenv("OPENAI_API_KEY"), verbose=True))
+    
+    # Generate Sweetviz report
+    #report_file = "sweetviz_report.html"
+    #report = sv.analyze(df)
+    #report.show_html(report_file)
+
+    # Create a link to open it in new tab
+    #st.markdown("### 📊 Open Sweetviz Report")
+    #st.markdown(f'<a href="{report_file}" target="_blank">👉 Click here to open report in new tab</a>', unsafe_allow_html=True)
+    
     # Store in session state
     st.session_state.df = df
     st.session_state.df_info_str = df_info_str
@@ -161,7 +174,7 @@ if uploaded_csv:
     
     # Set up the LLM
     llm_gr = ChatOpenAI(
-        temperature=1,
+        temperature=0.4,
         model_name="gpt-4o-mini"
     )
     
@@ -190,17 +203,18 @@ if uploaded_csv:
 
     Conversation so far we have with the user:
     {chat_history}
-    You should consider this conversation to add context to the user query.
+    You should consider this conversation to add context to the user query. If user hasn't formed full question, look at the last question to understand what could be his full question.
     
     The User query is:
     "{user_input}"
 
     Instructions:
-    1. Leverage all information above to understand the user query and rephase it with clarity for next tool. 
-    2. If the user query is ambiguous or unclear (e.g., refers to something not in columns), ask for clarification.
-    3. Once the query is clear, rephrase it into a precise form for downstream analysis.
-    4. If the query is already clear and relevant to the dataset, just rephrase it clearly.
-    5. Make sure to not have word 'clarification' in the response if query is clear.
+    1. If the current query refers to something comparative (e.g., "lowest", "most", "that", "then", "it"), use the chat history to determine what the user is referring to.
+    2. For example, if user previously asked which team won highest number of matches, and now asking "then what was the score of that team", you should understand that user is asking about the score of the team with highest number of matches.
+    3. If the user query is ambiguous or unclear (e.g., refers to something not in columns), ask for clarification.
+    4. Once the ask in the query is clear, rephrase it into a precise form for downstream analysis.
+    5. If the query is already clear and relevant to the dataset, just rephrase it clearly.
+    6. Make sure to not have word 'clarification' in the response if query is clear.
 
     Respond ONLY in one of the following formats:
     - If unclear:
@@ -209,8 +223,6 @@ if uploaded_csv:
     Rephrased Query: <your improved query>
     """
 )
-
-    
     
     # Create guardrail chain
     guardrail_chain, _ = create_guardrail_chain(llm_gr, guardrail_prompt)
@@ -285,9 +297,9 @@ if st.session_state.df is not None:
                 
                 chat_history = extract_chat_history_from_string(str(st.session_state.memory_gr.buffer))
                 
-                #with st.chat_message("assistant"):
-                        #st.markdown("**🤔 current memory:**")
-                        #st.markdown(chat_history)
+                with st.chat_message("assistant"):
+                        st.markdown("**🤔 current memory:**")
+                        st.markdown(chat_history)
                         #st.markdown("**🤔 Raw:**")
                         #st.markdown(str(st.session_state.memory_gr.buffer))
                 
