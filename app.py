@@ -52,19 +52,19 @@ class StreamlitChatCallbackHandler(BaseCallbackHandler):
             st.markdown("**🧾 Action Input:**")
             st.code(str(action.tool_input), language="python")
 
-    # def on_tool_end(self, output: str, **kwargs) -> None:
-    #     with st.chat_message("assistant"):
-    #         st.markdown("**👀 Observation:**")
+    def on_tool_end(self, output: str, **kwargs) -> None:
+        with st.chat_message("assistant"):
+            st.markdown("**👀 Observation:**")
 
-    #         # Try to render tabular data if present
-    #         try:
-    #             df = pd.read_fwf(io.StringIO(output))
-    #             if not df.empty and df.shape[1] > 1:
-    #                 st.dataframe(df, use_container_width=True)
-    #             else:
-    #                 st.code(output)
-    #         except Exception:
-    #             st.code(output)            
+            # Try to render tabular data if present
+            try:
+                df = pd.read_fwf(io.StringIO(output))
+                if not df.empty and df.shape[1] > 1:
+                    st.dataframe(df, use_container_width=True)
+                else:
+                    st.code(output)
+            except Exception:
+                st.code(output)            
     
     # def on_llm_end(self, response, **kwargs) -> None:
     #     with st.chat_message("assistant"):
