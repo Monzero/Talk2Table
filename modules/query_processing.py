@@ -95,9 +95,10 @@ def extract_chat_history_from_string(chat_string):
     
     chat_history = []
     for human_msg, ai_msg in matches:
-        chat_history.append(f"User: {human_msg.strip()}\n\n AI Replied: {ai_msg.strip()}")
+        chat_history.append(f"User: {human_msg.strip()}\n\n AI : {ai_msg.strip()}")
     
     return "\n\n".join(chat_history)
+
 
 def run_guardrail_loop_streamlit(clarifier_chain, original_input, df_info, col_desc, memory_gr=None):
     """
