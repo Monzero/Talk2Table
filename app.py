@@ -348,7 +348,6 @@ st.markdown("---")
 st.markdown("""
 <div class="compact-footer">
     <div class="footer-content">
-        <span class="separator">•</span>
         <span>Built with <span class="heart">♥️</span> by <span class="name">Monil Shah</span></span>
         <a href="https://www.linkedin.com/in/monil-shah-b9b4911a/" target="_blank" class="linkedin-link">
             <span class="linkedin-icon">in</span>
