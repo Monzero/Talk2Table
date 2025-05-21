@@ -64,17 +64,17 @@ class StreamlitChatCallbackHandler(BaseCallbackHandler):
 # Set page configuration
 st.set_page_config(
     page_title="Talk2Table",
-    page_icon="📊",
+    page_icon="🦁",
     layout="wide",
 )
 
 # Sidebar for file uploads and settings
 with st.sidebar:
-    st.title("CSV Agent Settings")
+    st.title("Talk2table Settings")
     
     # File uploads
     uploaded_csv = st.file_uploader("Upload CSV file", type="csv")
-    uploaded_desc = st.file_uploader("Upload column descriptions (optional)", type="txt")
+    uploaded_desc = st.file_uploader("Upload column descriptions", type="txt")
     
     # Model selection
     # model_name = st.selectbox(
@@ -258,7 +258,7 @@ if st.session_state.df is not None:
     # Display column descriptions if available
     if st.session_state.col_desc_str:
         with st.expander("High level data observation"):
-            st.text(st.session_state.col_desc_str)
+            st.markdown(st.session_state.col_desc_str)
 
 # Display the conversation history
 for message in st.session_state.messages:
