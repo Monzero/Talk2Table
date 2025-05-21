@@ -342,7 +342,102 @@ if st.session_state.df is not None:
 else:
     st.info("Please upload a CSV file to start chatting!")
 
-# Footer
+
+# Compact footer with LinkedIn link that matches sidebar background
 st.markdown("---")
-st.caption("CSV Agent Chat - A tool for analyzing CSV data using natural language")
-st.markdown("Built with ♥️ by Monil Shah")
+st.markdown("""
+<div class="compact-footer">
+    <div class="footer-content">
+        <span class="separator">•</span>
+        <span>Built with <span class="heart">♥️</span> by <span class="name">Monil Shah</span></span>
+        <a href="https://www.linkedin.com/in/monil-shah-b9b4911a/" target="_blank" class="linkedin-link">
+            <span class="linkedin-icon">in</span>
+        </a>
+    </div>
+</div>
+
+<style>
+.compact-footer {
+    text-align: center;
+    margin-top: 20px;
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 -1px 4px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.1);
+}
+
+/* Match sidebar background color in both themes */
+html[data-theme="light"] .compact-footer {
+    background-color: #f0f2f6;
+}
+
+html[data-theme="dark"] .compact-footer {
+    background-color: #262730;
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+html[data-theme="light"] .footer-content {
+    color: #31333F;
+}
+
+html[data-theme="dark"] .footer-content {
+    color: #FAFAFA;
+}
+
+.separator {
+    color: #aaa;
+}
+
+.heart {
+    color: #ff4b4b;
+    font-size: 1rem;
+    animation: heartbeat 1.5s infinite;
+    display: inline-block;
+    position: relative;
+    top: 1px;
+}
+
+.name {
+    font-weight: bold;
+    background: linear-gradient(90deg, #007bff, #6610f2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.linkedin-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    background-color: #0077B5;
+}
+
+.linkedin-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    opacity: 0.9;
+}
+
+.linkedin-icon {
+    font-weight: bold;
+    color: white;
+    font-size: 0.75rem;
+}
+
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+</style>
+""", unsafe_allow_html=True)
