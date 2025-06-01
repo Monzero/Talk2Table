@@ -134,7 +134,7 @@ with st.sidebar:
     st.title("Talk2table Settings")
     
     # Data source selection
-    st.subheader("📊 Data Source")
+    st.subheader("Data Source")
     data_source = st.radio(
         "Choose your data source:",
         ["Upload your own files", "Use sample data"],
@@ -146,7 +146,7 @@ with st.sidebar:
     
     if data_source == "Upload your own files":
         # File uploads
-        st.subheader("📁 File Upload")
+        st.subheader("File Upload")
         uploaded_csv = st.file_uploader("Upload CSV file", type="csv")
         uploaded_desc = st.file_uploader("Upload column descriptions", type="txt")
         
@@ -163,7 +163,7 @@ with st.sidebar:
                     desc_path = tmp_desc.name
     
     else:  # Use sample data
-        st.subheader("📋 Sample Datasets")
+        st.subheader("Sample Datasets")
         sample_datasets = get_sample_datasets()
         
         if sample_datasets:
@@ -200,7 +200,7 @@ with st.sidebar:
     # )
     
     # Clear buttons
-    st.subheader("🔄 Session Management")
+    st.subheader("Session Management")
     if st.button("Clear Chat History"):
         st.session_state.messages = []
         st.session_state.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
