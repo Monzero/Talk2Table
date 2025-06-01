@@ -77,7 +77,50 @@ class StreamlitChatCallbackHandler(BaseCallbackHandler):
             st.markdown("✅ **Chain completed**")
             st.json(outputs)
 
+
+def get_sample_datasets():
+    """
+    Get available sample datasets from the sample_data folder.
     
+    Returns:
+        dict: Dictionary with dataset names as keys and file paths as values
+    """
+    sample_data_folder = "sample_data"
+    datasets = {}
+    
+    if os.path.exists(sample_data_folder):
+        csv_files = [f for f in os.listdir(sample_data_folder) if f.endswith('.csv')]
+        for csv_file in csv_files:
+            dataset_name = os.path.splitext(csv_file)[0]
+            csv_path = os.path.join(sample_data_folder, csv_file)
+            
+            # Look for corresponding description file
+            desc_file = f"{dataset_name}_desc.txt"
+            desc_path = os.path.join(sample_data_folder, desc_file)
+            if not os.path.exists(desc_path):
+                desc_path = None
+            
+            datasets[dataset_name] = {
+                'csv_path': csv_path,
+                'desc_path': desc_path,
+                'display_name': dataset_name.replace('_', ' ').title()
+            }
+    
+    return datasets
+
+
+def load_sample_dataset(dataset_info):
+    """
+    Load a sample dataset and return the paths.
+    
+    Args:
+        dataset_info (dict): Dataset information containing paths
+        
+    Returns:
+        tuple: (csv_path, desc_path)
+    """
+    return dataset_info['csv_path'], dataset_info['desc_path']
+
     
 # Set page configuration
 st.set_page_config(
@@ -90,11 +133,66 @@ st.set_page_config(
 with st.sidebar:
     st.title("Talk2table Settings")
     
-    # File uploads
-    uploaded_csv = st.file_uploader("Upload CSV file", type="csv")
-    uploaded_desc = st.file_uploader("Upload column descriptions", type="txt")
+    # Data source selection
+    st.subheader("📊 Data Source")
+    data_source = st.radio(
+        "Choose your data source:",
+        ["Upload your own files", "Use sample data"],
+        index=0
+    )
     
-    # Model selection
+    csv_path = None
+    desc_path = None
+    
+    if data_source == "Upload your own files":
+        # File uploads
+        st.subheader("📁 File Upload")
+        uploaded_csv = st.file_uploader("Upload CSV file", type="csv")
+        uploaded_desc = st.file_uploader("Upload column descriptions", type="txt")
+        
+        if uploaded_csv:
+            # Save uploaded CSV to temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_csv:
+                tmp_csv.write(uploaded_csv.getvalue())
+                csv_path = tmp_csv.name
+            
+            # Save uploaded description to temporary file if provided
+            if uploaded_desc:
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as tmp_desc:
+                    tmp_desc.write(uploaded_desc.getvalue())
+                    desc_path = tmp_desc.name
+    
+    else:  # Use sample data
+        st.subheader("📋 Sample Datasets")
+        sample_datasets = get_sample_datasets()
+        
+        if sample_datasets:
+            dataset_options = list(sample_datasets.keys())
+            dataset_display_names = [sample_datasets[key]['display_name'] for key in dataset_options]
+            
+            selected_dataset = st.selectbox(
+                "Select a sample dataset:",
+                options=dataset_options,
+                format_func=lambda x: sample_datasets[x]['display_name'],
+                index=0
+            )
+            
+            if selected_dataset:
+                csv_path, desc_path = load_sample_dataset(sample_datasets[selected_dataset])
+                st.success(f"✅ Selected: {sample_datasets[selected_dataset]['display_name']}")
+                
+                # Show dataset info
+                if os.path.exists(csv_path):
+                    try:
+                        sample_df = pd.read_csv(csv_path)
+                        st.info(f"📈 Dataset shape: {sample_df.shape[0]} rows, {sample_df.shape[1]} columns")
+                    except Exception as e:
+                        st.error(f"Error reading dataset: {str(e)}")
+        else:
+            st.warning("⚠️ No sample datasets found in the 'sample_data' folder.")
+            st.info("To add sample datasets, create a 'sample_data' folder and add CSV files with optional description files (filename_desc.txt).")
+    
+    # Model selection (commented out in original)
     # model_name = st.selectbox(
     #     "Select Model",
     #     ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"],
@@ -102,6 +200,7 @@ with st.sidebar:
     # )
     
     # Clear buttons
+    st.subheader("🔄 Session Management")
     if st.button("Clear Chat History"):
         st.session_state.messages = []
         st.session_state.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
@@ -153,20 +252,8 @@ if not api_key:
     st.error("OpenAI API key not found in .env file. Please add it to continue.")
     st.stop()
 
-# Process uploaded files
-if uploaded_csv:
-    # Save uploaded CSV to temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_csv:
-        tmp_csv.write(uploaded_csv.getvalue())
-        csv_path = tmp_csv.name
-    
-    # Save uploaded description to temporary file if provided
-    desc_path = None
-    if uploaded_desc:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as tmp_desc:
-            tmp_desc.write(uploaded_desc.getvalue())
-            desc_path = tmp_desc.name
-            
+# Process files (either uploaded or sample)
+if csv_path:
     # Set OpenAI API Key
     os.environ["OPENAI_API_KEY"] = api_key
     
@@ -175,7 +262,7 @@ if uploaded_csv:
     
     col_desc_str = str(generate_dataset_report_for_llm(df, col_desc_str, os.getenv("OPENAI_API_KEY"), verbose=True))
     
-    # Generate Sweetviz report
+    # Generate Sweetviz report (commented out in original)
     #report_file = "sweetviz_report.html"
     #report = sv.analyze(df)
     #report.show_html(report_file)
@@ -262,12 +349,14 @@ if uploaded_csv:
     callback = StreamlitChatCallbackHandler()
     
     
-    # Clean up temporary files
-    if desc_path:
-        os.unlink(desc_path)
-    os.unlink(csv_path)
+    # Clean up temporary files (only for uploaded files)
+    if data_source == "Upload your own files":
+        if desc_path and desc_path.startswith(tempfile.gettempdir()):
+            os.unlink(desc_path)
+        if csv_path and csv_path.startswith(tempfile.gettempdir()):
+            os.unlink(csv_path)
     
-    st.success(f"✅ Loaded CSV with shape {df.shape}")
+    st.success(f"✅ Loaded dataset with shape {df.shape}")
 
 # Display data preview if available
 if st.session_state.df is not None:
@@ -359,7 +448,10 @@ if st.session_state.df is not None:
                         # Add error message to history
                         st.session_state.messages.append({"role": "assistant", "content": error_message})
 else:
-    st.info("Please upload a CSV file to start chatting!")
+    if data_source == "Upload your own files":
+        st.info("Please upload a CSV file to start chatting!")
+    else:
+        st.info("Please select a sample dataset to start chatting!")
 
 
 # Compact footer with LinkedIn link that matches sidebar background
