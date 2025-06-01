@@ -1,0 +1,19 @@
+The data is about IPL tournament which is indian premier league. The column description is as following
+
+Match shows match sequence number and Date column is the date on which the match was played. Teams column shows teams between whom the match was played. The format of Teams columns is <Team1 v Team2>.
+
+Then you also have separately Team1 and Team2 columns. So in theory Teams column can be considered redundant. 
+
+Ground is the city in which the match was played. And the exact name of the ground is in Venue column.
+
+Toss is string which describes in words who won the toss and what did they opt. Toss_winner column shows the team who won the toss. And Toss_decision column mentions what they opted. In this regards, the Toss column is combined version of Toss_winner and Toss_decision. 
+
+First_Innings column show how many runs were scored in first innings. If you combine with who toss winner and toss decision, you can also derive who batted first inning. Same way second_Innings show how many runs were scored in second innings. Naturally if second innings score is higher than first, the team which batted second or bowled first won. 
+
+MOM is man of the match. Match_conditions is whether it was Day/Night or Night match.
+
+Winner columns shows which team won. And Won_by shows by what margin they won. If they successfully chased target then it say won by x wickets (e.g 5 wickets) and if they batted first and other team could not chase, it shows won by z runs where z is the gap between target and how much other team could make.
+
+Lastly, Result column describes the result in words.   
+
+So if I have know which team won against any specific team, I would first filter on rows where team column has name of that particular team. I will only keep rows where winner is not that particular team. Then I can take count of winner team and give name of the one with highest.

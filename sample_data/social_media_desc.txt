@@ -1,0 +1,41 @@
+The file contains survey responses from students aged 16–25 across multiple countries, capturing their social media usage patterns alongside key personal, academic, and well-being indicators. It is structured for easy import into statistical software or data-science environments and includes both quantitative and categorical fields to enable exploratory analysis, predictive modeling, and reporting on the relationships between social media addiction and various life outcomes.
+
+Column Descriptions
+Student_ID
+A unique integer identifier assigned to each survey respondent to enable de-duplication and track individual records without revealing personal information.
+
+Age
+The student’s age in completed years at the time of the survey, used to segment analysis by age group and control for developmental differences.
+
+Gender
+The student’s self-reported gender, recorded as “Male” or “Female” to allow for demographic breakdowns in usage and outcome measures.
+
+Academic_Level
+The highest level of education the respondent is currently enrolled in, with categories: “High School,” “Undergraduate,” or “Graduate,” facilitating stratified analyses by academic stage.
+
+Country
+The country of residence where the student completed the survey, enabling cross-country comparisons of social media behaviors and impacts.
+
+Avg_Daily_Usage_Hours
+The average number of hours per day the student spends on social media platforms, calculated from self-reported weekday and weekend usage estimates.
+
+Most_Used_Platform
+The social media platform on which the student spends the most time (e.g., Instagram, Facebook, TikTok), used to examine platform-specific effects.
+
+Affects_Academic_Performance
+A binary indicator (“Yes”/“No”) reflecting whether the student perceives their social media use as having a negative impact on their academic performance.
+
+Sleep_Hours_Per_Night
+The respondent’s average nightly sleep duration in hours, provided to investigate correlations between screen time and sleep quality/quantity.
+
+Mental_Health_Score
+A self-rated integer from 1 (poor) to 10 (excellent) indicating overall mental well-being, allowing assessment of potential associations with social media habits.
+
+Relationship_Status
+The student’s current romantic relationship status, categorized as “Single,” “In Relationship,” or “Complicated,” to explore social media’s impact on interpersonal dynamics.
+
+Conflicts_Over_Social_Media
+The number of arguments or disagreements the student reports having had with family, friends, or partners due to their social media use, serving as a proxy for social friction.
+
+Addicted_Score
+A composite score from 1 (low addiction) to 10 (high addiction) based on a standardized survey scale (e.g., Bergen Social Media Addiction Scale), quantifying the degree of problematic usage.
